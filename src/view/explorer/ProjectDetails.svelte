@@ -8,9 +8,7 @@
     selectedDraft,
     selectedDraftVaultPath,
   } from "src/model/stores";
-  import { getContext, onMount } from "svelte";
-  import Disclosure from "../components/Disclosure.svelte";
-  import Icon from "../components/Icon.svelte";
+  import { onMount } from "svelte";
   import { FileSuggest } from "../settings/file-suggest";
   import { FolderSuggest } from "../settings/folder-suggest";
   import {
@@ -18,16 +16,10 @@
     goalProgress,
     activeFile,
   } from "../stores";
-  import DraftList from "./DraftList.svelte";
   import ActivityHeatmap from "./ActivityHeatmap.svelte";
   import { useApp } from "../utils";
 
   const app = useApp();
-
-  let showMetdata = true;
-  let showWordCount = true;
-  let showActivity = true;
-  let showDrafts = true;
 
   function titleChanged(event: Event) {
     let newTitle = (event.target as any).value;
@@ -154,80 +146,58 @@
     )}/${$pluginSettings.sessionGoal}`;
   }
 
-  function pluralize(
-    count: number,
-    noun: string,
-    pluralNoun: string | null = null
-  ) {
-    if (count === undefined) {
-      return "";
+  function formatCount(count: number | null | undefined): string {
+    if (count === undefined || count === null) {
+      return "0";
     }
-    if (count === 1) {
-      return `${count.toLocaleString()} ${noun}`;
-    } else if (pluralNoun) {
-      return `${count.toLocaleString()} ${pluralNoun}`;
-    } else {
-      return `${count.toLocaleString()} ${noun}s`;
-    }
+    return count.toLocaleString();
   }
 
-  const showNewDraftModal: () => void = getContext("showNewDraftModal");
-  function onNewDraft() {
-    showNewDraftModal();
-  }
 </script>
 
-<div>
+<div class="longform-project">
   {#if $selectedDraft}
     <div class="longform-project-section">
-      <div
-        class="longform-project-details-section-header"
-        on:click={() => {
-          showMetdata = !showMetdata;
-        }}
-      >
-        <Disclosure collapsed={!showMetdata} />
-        <h4>Project Metadata</h4>
+      <div class="field">
+        <label for="longform-project-title">Title</label>
+        <input
+          id="longform-project-title"
+          type="text"
+          value={$selectedDraft.title}
+          on:change={titleChanged}
+        />
       </div>
-      {#if showMetdata}
-        <div>
-          <label for="longform-project-title">Title</label>
+      {#if $selectedDraft.format === "scenes"}
+        <div class="field">
+          <label for="longform-project-scene-folder">Scene Folder</label>
           <input
-            id="longform-project-title"
+            id="longform-project-scene-folder"
             type="text"
-            value={$selectedDraft.title}
-            on:change={titleChanged}
+            value={$selectedDraft.sceneFolder}
+            bind:this={sceneFolderInput}
+            on:blur={sceneFolderChanged}
           />
-          {#if $selectedDraft.format === "scenes"}
-            <label for="longform-project-scene-folder">Scene Folder</label>
-            <input
-              id="longform-project-scene-folder"
-              type="text"
-              value={$selectedDraft.sceneFolder}
-              bind:this={sceneFolderInput}
-              on:blur={sceneFolderChanged}
-            />
-            <p class="longform-project-warning">
-              Changing scene folder does not move scenes. If you’re moving
-              scenes to a new folder, move them in your vault first, then
-              change this setting.
-            </p>
-            <label for="longform-project-scene-template">Scene Template</label
-            >
-            <input
-              id="longform-project-scene-template"
-              type="text"
-              value={$selectedDraft.sceneTemplate}
-              bind:this={sceneTemplateInput}
-              on:blur={sceneTemplateChanged}
-            />
-            <p class="longform-project-warning">
-              This file will be used as a template when creating new scenes
-              via the New Scene… field. If you use a templating plugin
-              (Templater or the core plugin) it will be used to process this
-              template.
-            </p>
-          {/if}
+          <p class="longform-project-warning">
+            Changing scene folder does not move scenes. If you’re moving
+            scenes to a new folder, move them in your vault first, then
+            change this setting.
+          </p>
+        </div>
+        <div class="field">
+          <label for="longform-project-scene-template">Scene Template</label>
+          <input
+            id="longform-project-scene-template"
+            type="text"
+            value={$selectedDraft.sceneTemplate}
+            bind:this={sceneTemplateInput}
+            on:blur={sceneTemplateChanged}
+          />
+          <p class="longform-project-warning">
+            This file will be used as a template when creating new scenes
+            via the New scene… field. If you use a templating plugin
+            (Templater or the core plugin) it will be used to process this
+            template.
+          </p>
         </div>
       {/if}
     </div>
@@ -238,112 +208,67 @@
       goalPercentage >= 43 ? "var(--text-on-accent)" : "var(--text-accent)"
     }`}
   >
-    <div
-      class="longform-project-details-section-header"
-      on:click={() => {
-        showWordCount = !showWordCount;
-      }}
-    >
-      <Disclosure collapsed={!showWordCount} />
-      <h4>Word Count</h4>
-    </div>
-    {#if showWordCount}
-      <div>
-        {#if showProgress}
-          <div
-            class="progress"
-            data-label={goalDescription}
-            title={goalDescription}
-          >
-            <div class="value" style={`width:${goalPercentage}%;`} />
-          </div>
-        {/if}
-        {#if sceneCount}
-          <p title="Word count in this scene of this project.">
-            <strong>Scene:</strong>
-            {pluralize(sceneCount, "word")}
-          </p>
-        {/if}
-        {#if draftCount}
-          <p title="Word count in just this draft of this project.">
-            <strong>Draft:</strong>
-            {pluralize(draftCount, "word")}
-          </p>
-        {/if}
-        <p title="Word count across all drafts of this project.">
-          <strong>Project:</strong>
-          {pluralize(projectCount, "word")}
-        </p>
-      </div>
-    {/if}
-  </div>
-  <div class="longform-project-section">
-    <div
-      class="longform-project-details-section-header"
-      on:click={() => {
-        showActivity = !showActivity;
-      }}
-    >
-      <Disclosure collapsed={!showActivity} />
-      <h4>Activity</h4>
-    </div>
-    {#if showActivity}
-      <ActivityHeatmap />
-    {/if}
-  </div>
-  <div class="longform-project-section">
-    <div class="drafts-title-container">
+    {#if showProgress}
       <div
-        class="longform-project-details-section-header"
-        on:click={() => {
-          showDrafts = !showDrafts;
-        }}
+        class="progress"
+        data-label={goalDescription}
+        title={goalDescription}
       >
-        <Disclosure collapsed={!showDrafts} />
-        <h4>Drafts</h4>
+        <div class="value" style={`width:${goalPercentage}%;`} />
       </div>
-      <button type="button" on:click={onNewDraft}>
-        <Icon iconName="plus-with-circle" />
-      </button>
-    </div>
-    {#if showDrafts}
-      <DraftList />
     {/if}
+    <div class="word-count-stats">
+      {#if sceneCount !== null}
+        <div
+          class="word-count-stat"
+          title="Word count in this scene of this project."
+        >
+          <span class="word-count-value">{formatCount(sceneCount)}</span>
+          <span class="word-count-label">scene</span>
+        </div>
+      {/if}
+      {#if draftCount !== null}
+        <div
+          class="word-count-stat"
+          title="Word count in just this draft of this project."
+        >
+          <span class="word-count-value">{formatCount(draftCount)}</span>
+          <span class="word-count-label">draft</span>
+        </div>
+      {/if}
+      <div
+        class="word-count-stat"
+        title="Word count across all drafts of this project."
+      >
+        <span class="word-count-value">{formatCount(projectCount)}</span>
+        <span class="word-count-label">project</span>
+      </div>
+    </div>
+  </div>
+  <div class="longform-project-section heatmap-section">
+    <ActivityHeatmap />
   </div>
 </div>
 
 <style>
-  .longform-project-section {
-    margin-top: var(--size-4-4);
-    padding-bottom: var(--size-4-2);
-    padding-left: var(--size-4-8);
-  }
-
-  .longform-project-section + .longform-project-section {
-    border-top: var(--border-width) solid var(--background-modifier-border);
-    padding-top: var(--size-4-4);
-  }
-
-  .longform-project-section .right-triangle {
-    margin-left: var(--size-4-1);
-    margin-right: var(--size-4-2);
-  }
-
-  .longform-project-details-section-header {
+  .longform-project {
     display: flex;
-    flex-direction: row;
-    justify-content: start;
-    align-items: center;
-    cursor: pointer;
-    margin-left: calc(var(--size-4-6) * -1);
+    flex-direction: column;
+    gap: var(--size-4-8);
+    padding-top: var(--size-4-3);
+    padding-bottom: var(--size-4-4);
   }
 
-  h4 {
-    font-size: var(--font-ui-medium);
-    color: var(--text-normal);
-    user-select: none;
-    font-weight: inherit;
-    margin: 0 0 0 var(--size-4-4);
+  .longform-project-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-4-5);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-4-1);
   }
 
   input {
@@ -354,27 +279,44 @@
     display: block;
     font-size: var(--font-ui-smaller);
     color: var(--text-muted);
-    margin-top: var(--size-4-4);
     line-height: var(--line-height-tight);
   }
 
   p.longform-project-warning {
     color: var(--text-faint);
     font-size: var(--font-smallest);
-    margin: var(--size-2-1) 0 0 var(--size-2-1);
+    margin: 0;
     line-height: normal;
   }
 
-  .word-counts p {
-    margin: var(--size-4-2) 0;
-    font-size: var(--font-smallest);
-    color: var(--text-muted);
+  .word-counts {
+    gap: var(--size-4-3);
   }
 
-  .word-counts p strong {
+  .word-count-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--size-4-6);
+  }
+
+  .word-count-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 4em;
+  }
+
+  .word-count-value {
+    font-size: var(--font-ui-medium);
     color: var(--text-normal);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--line-height-tight);
   }
 
+  .word-count-label {
+    font-size: var(--font-smallest);
+    color: var(--text-faint);
+  }
 
   .progress {
     height: var(--size-4-6);
@@ -383,7 +325,6 @@
     border-radius: var(--radius-s);
     position: relative;
     overflow: hidden;
-    margin-top: var(--size-4-4);
   }
 
   .progress:before {
@@ -408,22 +349,7 @@
     background-color: var(--text-accent);
   }
 
-  .drafts-title-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--size-4-2);
-  }
-
-  .drafts-title-container h4 {
-    margin-right: var(--size-4-2);
-  }
-
-  .drafts-title-container button {
-    margin: 0;
-    padding: var(--size-4-2);
-    color: var(--interactive-accent);
-    background-color: inherit;
+  .heatmap-section {
+    gap: 0;
   }
 </style>

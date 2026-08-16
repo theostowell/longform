@@ -9,7 +9,7 @@
   import { last } from "lodash";
   import { getContext } from "svelte";
   import { draftTitle } from "src/model/draft-utils";
-  import { Keymap, type PaneType } from "obsidian";
+  import { type PaneType } from "obsidian";
 
   const openFileAtPath: (path: string, paneType: PaneType | boolean) => void =
     getContext("onSceneClick");
@@ -51,10 +51,6 @@
     }
     $selectedDraftVaultPath = draftPath;
   }
-
-  function onDraftClick(e: MouseEvent) {
-    openFileAtPath($selectedDraft.vaultPath, Keymap.isModEvent(e));
-  }
 </script>
 
 <div id="project-picker-container">
@@ -84,11 +80,6 @@
         </div>
       {/if}
     </div>
-    {#if $selectedDraft}
-      <div class="current-draft-path" on:click={(e) => onDraftClick(e)}>
-        {$selectedDraft.vaultPath}
-      </div>
-    {/if}
   {:else}
     <p>
       To begin, find or create a folder somewhere in your vault in which you
@@ -126,17 +117,6 @@
     transition:
       box-shadow 0.15s ease-in-out,
       border 0.15s ease-in-out;
-  }
-
-  .current-draft-path {
-    color: var(--text-faint);
-    font-size: var(--font-smallest);
-    padding: 0 0 var(--size-4-1) var(--size-4-3);
-  }
-
-  .current-draft-path:hover {
-    color: var(--text-accent);
-    cursor: pointer;
   }
 
   #select-drafts {

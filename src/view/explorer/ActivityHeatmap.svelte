@@ -1,10 +1,15 @@
 <script lang="ts">
+  import { onMount, tick } from "svelte";
   import { sessions, selectedProject } from "src/model/stores";
   import type { WordCountSession } from "src/model/types";
 
-  // Number of weeks to render (roughly 3 months).
-  const WEEKS = 13;
+  const WEEKS = 53;
   const DAYS_PER_WEEK = 7;
+  const TARGET_VISIBLE_WEEKS = 16;
+  const MIN_CELL = 8;
+  const MAX_CELL = 14;
+  const CELL_GAP = 3;
+  const WEEKDAY_GUTTER = 26;
 
   const MONTH_NAMES = [
     "Jan",
@@ -21,7 +26,6 @@
     "Dec",
   ];
 
-  // GitHub-style: only label a few weekdays down the left gutter.
   const WEEKDAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""];
 
   type DayCell = {
@@ -53,12 +57,10 @@
     return `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   }
 
-  // Draft vault paths that make up the currently selected project.
   $: projectPaths = $selectedProject
     ? $selectedProject.map((d) => d.vaultPath)
     : [];
 
-  // Map of "YYYY-MM-DD" -> words written in this project that day.
   $: wordsByDay = aggregateWordsByDay($sessions, projectPaths);
 
   function aggregateWordsByDay(
@@ -91,7 +93,6 @@
     return map;
   }
 
-  // 0 (none) to 4 (most), scaled against the heaviest day in the window.
   function intensity(words: number, max: number): number {
     if (words <= 0 || max <= 0) {
       return 0;
@@ -107,49 +108,74 @@
   let monthLabels: (string | null)[] = [];
   let totalWords = 0;
   let activeDays = 0;
+  let cellSize = 10;
+  let scrollEl: HTMLDivElement;
+
+  function measure() {
+    if (!scrollEl) {
+      return;
+    }
+    const available = scrollEl.clientWidth - WEEKDAY_GUTTER - CELL_GAP;
+    const size = Math.floor(available / TARGET_VISIBLE_WEEKS) - CELL_GAP;
+    cellSize = Math.max(MIN_CELL, Math.min(MAX_CELL, size));
+  }
+
+  function scrollToLatest() {
+    if (!scrollEl) {
+      return;
+    }
+    scrollEl.scrollLeft = scrollEl.scrollWidth;
+  }
+
+  onMount(() => {
+    measure();
+    const observer = new ResizeObserver(() => {
+      const wasAtEnd =
+        scrollEl &&
+        scrollEl.scrollWidth - scrollEl.clientWidth - scrollEl.scrollLeft < 8;
+      measure();
+      if (wasAtEnd) {
+        tick().then(scrollToLatest);
+      }
+    });
+    observer.observe(scrollEl);
+    tick().then(scrollToLatest);
+    return () => observer.disconnect();
+  });
 
   $: {
     const today = startOfDay(new Date());
 
-    // Sunday of the current week.
     const currentWeekStart = new Date(today);
-    currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+    currentWeekStart.setDate(
+      currentWeekStart.getDate() - currentWeekStart.getDay()
+    );
 
-    // Sunday of the first week in the window.
     const gridStart = new Date(currentWeekStart);
     gridStart.setDate(gridStart.getDate() - (WEEKS - 1) * DAYS_PER_WEEK);
 
-    // Stats across the whole window (used for scaling + footer).
+    type RawCell = Omit<DayCell, "level">;
+    const rawWeeks: RawCell[][] = [];
+    const labels: (string | null)[] = [];
+    let lastMonth = -1;
     let max = 0;
     let total = 0;
     let days = 0;
-    wordsByDay.forEach((value) => {
-      if (value > max) max = value;
-      total += value;
-      days += 1;
-    });
-    totalWords = total;
-    activeDays = days;
-
-    const builtWeeks: Week[] = [];
-    const labels: (string | null)[] = [];
-    let lastMonth = -1;
     const cursor = new Date(gridStart);
 
     for (let w = 0; w < WEEKS; w++) {
-      const week: DayCell[] = [];
+      const week: RawCell[] = [];
       for (let d = 0; d < DAYS_PER_WEEK; d++) {
         const date = new Date(cursor);
         const future = date.getTime() > today.getTime();
         const key = dateKey(date);
         const words = future ? 0 : wordsByDay.get(key) || 0;
-        week.push({
-          date,
-          key,
-          words,
-          level: intensity(words, max),
-          future,
-        });
+        week.push({ date, key, words, future });
+        if (words > max) max = words;
+        if (words > 0) {
+          total += words;
+          days += 1;
+        }
         cursor.setDate(cursor.getDate() + 1);
       }
 
@@ -161,11 +187,18 @@
         labels.push(null);
       }
 
-      builtWeeks.push(week);
+      rawWeeks.push(week);
     }
 
-    weeks = builtWeeks;
+    weeks = rawWeeks.map((week) =>
+      week.map((cell) => ({
+        ...cell,
+        level: intensity(cell.words, max),
+      }))
+    );
     monthLabels = labels;
+    totalWords = total;
+    activeDays = days;
   }
 
   function cellTitle(cell: DayCell): string {
@@ -177,30 +210,36 @@
   }
 </script>
 
-<div class="longform-heatmap">
-  <div class="longform-heatmap-months">
-    {#each monthLabels as label}
-      <span class="longform-heatmap-month">{label || ""}</span>
-    {/each}
-  </div>
-  <div class="longform-heatmap-body">
-    <div class="longform-heatmap-weekdays">
-      {#each WEEKDAY_LABELS as label}
-        <span class="longform-heatmap-weekday">{label}</span>
+<div
+  class="longform-heatmap"
+  style="--heat-cell-size: {cellSize}px; --heat-gap: {CELL_GAP}px; --heat-gutter: {WEEKDAY_GUTTER}px"
+>
+  <div class="longform-heatmap-scroll" bind:this={scrollEl}>
+    <div class="longform-heatmap-months">
+      <span class="longform-heatmap-month-gutter"></span>
+      {#each monthLabels as label}
+        <span class="longform-heatmap-month">{label || ""}</span>
       {/each}
     </div>
-    <div class="longform-heatmap-grid">
-      {#each weeks as week}
-        <div class="longform-heatmap-week">
-          {#each week as cell}
-            <div
-              class="longform-heatmap-cell level-{cell.level}"
-              class:future={cell.future}
-              title={cellTitle(cell)}
-            ></div>
-          {/each}
-        </div>
-      {/each}
+    <div class="longform-heatmap-body">
+      <div class="longform-heatmap-weekdays">
+        {#each WEEKDAY_LABELS as label}
+          <span class="longform-heatmap-weekday">{label}</span>
+        {/each}
+      </div>
+      <div class="longform-heatmap-grid">
+        {#each weeks as week}
+          <div class="longform-heatmap-week">
+            {#each week as cell}
+              <div
+                class="longform-heatmap-cell level-{cell.level}"
+                class:future={cell.future}
+                title={cellTitle(cell)}
+              ></div>
+            {/each}
+          </div>
+        {/each}
+      </div>
     </div>
   </div>
   <div class="longform-heatmap-footer">
@@ -222,18 +261,32 @@
 
 <style>
   .longform-heatmap {
-    --heat-cell-size: 10px;
-    --heat-gap: 3px;
-    --heat-gutter: 26px;
-    margin-top: var(--size-4-3);
+    width: 100%;
+  }
+
+  .longform-heatmap-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    padding-bottom: var(--size-4-1);
+    scrollbar-width: thin;
   }
 
   .longform-heatmap-months {
     display: flex;
     gap: var(--heat-gap);
-    margin-left: var(--heat-gutter);
     margin-bottom: var(--size-2-1);
     height: 12px;
+    width: max-content;
+  }
+
+  .longform-heatmap-month-gutter {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    width: var(--heat-gutter);
+    flex-shrink: 0;
+    background: var(--background-primary);
   }
 
   .longform-heatmap-month {
@@ -243,20 +296,26 @@
     color: var(--text-muted);
     white-space: nowrap;
     overflow: visible;
+    flex-shrink: 0;
   }
 
   .longform-heatmap-body {
     display: flex;
     gap: var(--heat-gap);
+    width: max-content;
   }
 
   .longform-heatmap-weekdays {
+    position: sticky;
+    left: 0;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     gap: var(--heat-gap);
     width: var(--heat-gutter);
     margin-right: var(--heat-gap);
     flex-shrink: 0;
+    background: var(--background-primary);
   }
 
   .longform-heatmap-weekday {

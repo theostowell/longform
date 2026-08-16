@@ -38,7 +38,7 @@
   <input
     id="new-scene"
     type="text"
-    placeholder="New Scene"
+    placeholder="New scene..."
     bind:value={newSceneName}
     bind:this={newSceneInput}
     on:keydown={(e) => {

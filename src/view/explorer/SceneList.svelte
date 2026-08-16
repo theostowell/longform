@@ -51,6 +51,9 @@
         ? itemsFromScenes($selectedDraft.scenes, collapsedItems)
         : [];
   }
+  // Only reserve the disclosure-chevron gutter when something in the list
+  // actually nests. Flat manuscripts should line up with New Scene.
+  $: hasCollapsible = items.some((i) => i.collapsible);
 
   // INDENTATION & COLLAPSING
   let ghostIndent = 0;
@@ -357,7 +360,7 @@
     >
       <div
         class="scene-container{item.hidden ? ' hidden' : ''}{item.collapsible ? ' collapsible' : ''}"
-        style="padding-left: calc(({item.indent} * var(--longform-explorer-indent-size)) + 6px {item.collapsible ? '' : '+ var(--size-4-4)'});"
+        style="padding-left: calc(({item.indent} * var(--longform-explorer-indent-size)) + var(--size-4-2){item.collapsible || !hasCollapsible ? '' : ' + var(--size-4-4)'});"
         class:selected={$activeFile && $activeFile.path === item.path}
         on:contextmenu|preventDefault={onContext}
         data-scene-path={item.path}
