@@ -189,7 +189,7 @@ Once loaded, the user script will be available in the Add Step menu of Compile. 
 
 In Compile, steps are organized into workflows. Longform ships with a default workflow that demonstrates Compile and produces a simple formatted manuscript. Feel free to customize or delete the default workflow.
 
-You can create new workflows to suit each of your projects. Each workflow has a description box you may use to remind yourself what exactly the workflow does. A Longform project remembers its last-used workflow and will select it first when you next open the Compile tab.
+You can create new workflows to suit each of your projects. A Longform project remembers its last-used workflow and will select it first when you next open the Compile tab.
 
 Workflows are vault-wide; if you change a workflow within a project, it will change for all projects that use that workflow.
 

@@ -296,8 +296,6 @@ export async function compile(
 export const DEFAULT_WORKFLOWS: Record<string, SerializedWorkflow> = {
   "Default Workflow": {
     name: "Default Workflow",
-    description:
-      "A starter workflow. Feel free to edit, rename, or delete it and create your own.",
     steps: [
       {
         id: "strip-frontmatter",

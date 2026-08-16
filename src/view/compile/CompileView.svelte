@@ -21,7 +21,6 @@
   } from "src/model/stores";
   import CompileStepView from "./CompileStepView.svelte";
   import SortableList from "../sortable/SortableList.svelte";
-  import AutoTextArea from "../components/AutoTextArea.svelte";
   import type { Draft } from "src/model/types";
 
   let workflowContextButton: HTMLElement;
@@ -120,7 +119,6 @@
     if (workflowInputState == "new") {
       $workflows[workflowInputValue] = {
         name: workflowInputValue,
-        description: "",
         steps: [],
       };
     } else if (workflowInputState == "rename") {
@@ -308,14 +306,6 @@
           >
         {/if}
       </div>
-      {#if $workflows[currentWorkflowName]}
-        <AutoTextArea
-          placeholder="Click here to leave a description of your workflow…"
-          minRows={2}
-          maxRows={5}
-          bind:value={$workflows[currentWorkflowName].description}
-        />
-      {/if}
     </div>
     {#if $workflows[currentWorkflowName]}
       <SortableList

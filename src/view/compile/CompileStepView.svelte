@@ -126,27 +126,30 @@
     flex-direction: row;
     align-items: center;
     flex-wrap: wrap;
+    gap: var(--size-4-2);
     font-size: var(--font-ui-smaller);
   }
 
   .longform-compile-step-title-container h4 {
     display: inline-block;
-    margin: var(--size-4-1) var(--size-4-2) var(--size-4-1) 0;
+    margin: var(--size-4-1) 0;
     padding: 0;
   }
 
   .longform-compile-step-title-container .longform-step-kind-pill {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     align-items: center;
-    background-color: color-mix(in srgb, var(--text-accent) 50%, var(--background-modifier-border) 50%);
-    color: var(--text-on-accent);
-    border-radius: var(--radius-l);
+    background-color: color-mix(in srgb, var(--text-accent) 15%, transparent);
+    color: var(--text-accent);
+    border: 1px solid color-mix(in srgb, var(--text-accent) 30%, transparent);
+    border-radius: var(--radius-s);
     font-size: var(--font-smallest);
-    font-weight: bold;
-    padding: var(--size-4-1) var(--size-4-2);
-    margin-right: var(--size-4-1);
-    height: var(--h1-line-height);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    line-height: 1;
+    padding: calc(var(--size-4-1) / 2) var(--size-4-2);
   }
 
   .longform-compile-step-number {

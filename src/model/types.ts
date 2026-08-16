@@ -38,7 +38,6 @@ export type SerializedStep = {
 
 export type SerializedWorkflow = {
   name: string;
-  description: string;
   steps: SerializedStep[];
 };
 

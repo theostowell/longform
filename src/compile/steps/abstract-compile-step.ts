@@ -166,8 +166,6 @@ export interface CompileStep {
 export type Workflow = {
   /** The name of the workflow via user input. */
   name: string;
-  /** A longer description of the workflow. */
-  description: string;
   /** The steps that comprise the workflow. */
   steps: CompileStep[];
 };

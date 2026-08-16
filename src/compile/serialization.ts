@@ -19,7 +19,6 @@ export function serializeWorkflow(workflow: Workflow): SerializedWorkflow {
   })) as SerializedStep[];
   return {
     name: workflow.name,
-    description: workflow.description,
     steps: serialized,
   };
 }
