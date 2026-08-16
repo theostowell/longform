@@ -322,11 +322,7 @@ export class LongformSettingsTab extends PluginSettingTab {
 
     containerEl.createEl("p", {}, (el) => {
       el.innerHTML =
-        'Longform written and maintained by <a href="https://kevinbarrett.org">Kevin Barrett</a>.';
-    });
-    containerEl.createEl("p", {}, (el) => {
-      el.innerHTML =
-        'Read the source code and report issues at <a href="https://github.com/kevboh/longform">https://github.com/kevboh/longform</a>.';
+        'Maintained by <a href="https://github.com/theostowell/longform">Theo Stowell</a>. Forked from <a href="https://github.com/kevboh/longform">Longform by Kevin Barrett</a>.';
     });
     containerEl.createEl("p", {}, (el) => {
       el.innerHTML =

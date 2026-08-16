@@ -1,9 +1,8 @@
 ## Longform
 
-Longform is a plugin for [Obsidian](https://obsidian.md) that helps you write and edit novels, screenplays, and other long projects. It lets you organize a series of notes, or _scenes_, into an ordered manuscript. It also supports single-note projects for shorter works.
+> **Fork notice:** this is a personal fork of [Longform](https://github.com/kevboh/longform) by Kevin Barrett, maintained by [Theo Stowell](https://github.com/theostowell/longform).
 
-> [!TIP]
-> If you’d like a way to sync, share your manuscripts with others, and edit them on the web check out my other project, [screen.garden](https://screen.garden).
+Longform is a plugin for [Obsidian](https://obsidian.md) that helps you write and edit novels, screenplays, and other long projects. It lets you organize a series of notes, or _scenes_, into an ordered manuscript. It also supports single-note projects for shorter works.
 
 Major features include:
 

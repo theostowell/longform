@@ -19,12 +19,14 @@
     activeFile,
   } from "../stores";
   import DraftList from "./DraftList.svelte";
+  import ActivityHeatmap from "./ActivityHeatmap.svelte";
   import { useApp } from "../utils";
 
   const app = useApp();
 
   let showMetdata = true;
   let showWordCount = true;
+  let showActivity = true;
   let showDrafts = true;
 
   function titleChanged(event: Event) {
@@ -273,6 +275,20 @@
           {pluralize(projectCount, "word")}
         </p>
       </div>
+    {/if}
+  </div>
+  <div class="longform-project-section">
+    <div
+      class="longform-project-details-section-header"
+      on:click={() => {
+        showActivity = !showActivity;
+      }}
+    >
+      <Disclosure collapsed={!showActivity} />
+      <h4>Activity</h4>
+    </div>
+    {#if showActivity}
+      <ActivityHeatmap />
     {/if}
   </div>
   <div class="longform-project-section">

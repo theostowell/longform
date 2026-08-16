@@ -10,7 +10,7 @@
     "build": "npm run lint && rollup --config rollup.config.js --environment BUILD:production"
   },
   "keywords": [],
-  "author": "",
+  "author": "Theo Stowell",
   "license": "SEE LICENSE IN LICENSE.md",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^22.0.0",
